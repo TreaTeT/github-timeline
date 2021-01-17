@@ -9,30 +9,44 @@ import "react-vertical-timeline-component/style.min.css";
 
 function App() {
   const axios = require("axios");
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, errors } = useForm();
   const [user, setUser] = React.useState();
   const [repos, setRepos] = React.useState();
+  const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
 
   const onSubmit = ({ name }) => {
     axios
       .all([
-        axios.get(`https://api.github.com/users/${name}`, {}),
-        axios.get(`https://api.github.com/users/${name}/repos`, {}),
+        axios.get(`https://api.github.com/users/${name}`, {
+          headers: {
+            Authorization: `token ${GITHUB_TOKEN}`,
+          },
+        }),
+        axios.get(`https://api.github.com/users/${name}/repos`, {
+          headers: {
+            Authorization: `token ${GITHUB_TOKEN}`,
+          },
+        }),
       ])
       .then(
         axios.spread((user, repos) => {
           setUser(user.data);
-
           setRepos(repos.data.sort((a, b) => a.created_at < b.created_at));
         })
       )
       .catch((errors) => {
-        console.log(errors);
+        console.log(errors.response.status);
+
+        if (errors.response.status === 404) {
+          setUser(false);
+          setRepos(false);
+        }
       });
   };
 
   return (
     <div className="min-h-screen bg-gray-100 py-6 flex flex-col sm:py-12">
+      {console.log(GITHUB_TOKEN)}
       <p className="mx-auto font-bold text-4xl mb-5 tracking-wide text-blue-500">
         Github Timeline
       </p>
@@ -44,6 +58,11 @@ function App() {
           placeholder="Please enter you Github login"
           className="block mx-auto outline-none w-80 py-1 border-green-500 border-t-2 rounded  px-2 font-normal mb-5"
         />
+        {errors.name && (
+          <div className="block text-red-500 font-sans font-semibold text-xs text-opacity-70 mx-auto">
+            Enter a valid name!
+          </div>
+        )}
         <input
           type="submit"
           value="Submit"
@@ -60,19 +79,23 @@ function App() {
           ></img>
           <div className="mx-auto font-semibold">
             <ul>
-              <li className="text-blue-600 outline-none">
+              <li className="text-blue-600 outline-none" key="login">
                 <a target="_blank" href={user.html_url} rel="noreferrer">
                   {user.login}
                 </a>
               </li>
-              <li>{`${user.followers} followers`}</li>
-              <li>{`${user.public_repos} public repos`}</li>
-              <li>{`joined ${user.created_at
+              <li key="followers">{`${user.followers} followers`}</li>
+              <li key="repos">{`${user.public_repos} public repos`}</li>
+              <li key="joined">{`joined ${user.created_at
                 .split("")
                 .splice(0, 10)
                 .join("")}`}</li>
             </ul>
           </div>
+        </div>
+      ) : user === false ? (
+        <div className="block mx-auto font-bold text-lg text-red-400 text-opacity-80">
+          User not found!
         </div>
       ) : (
         ""
@@ -96,17 +119,26 @@ function App() {
                       {repo.html_url}
                     </a>
                   </li>
-                  <li className="text-md text-gray-900 text-2sm leading-relaxed">{`created ${repo.created_at
+                  <li
+                    key="created"
+                    className="text-md text-gray-900 text-2sm leading-relaxed"
+                  >{`created ${repo.created_at
                     .split("")
                     .splice(0, 10)
                     .join("")}`}</li>
-                  <li className="text-md text-gray-900 text-2sm leading-relaxed">
+                  <li
+                    key="updated"
+                    className="text-md text-gray-900 text-2sm leading-relaxed"
+                  >
                     {`last updated ${repo.pushed_at
                       .split("")
                       .splice(0, 10)
                       .join("")}`}
                   </li>
-                  <li className="text-md text-green-500 text-lg font-bold leading-relaxed">
+                  <li
+                    key="language"
+                    className="text-md text-green-500 text-lg font-bold leading-relaxed"
+                  >
                     {repo.language ? repo.language.toUpperCase() : ""}
                   </li>
 
