@@ -35,8 +35,6 @@ function App() {
         })
       )
       .catch((errors) => {
-        console.log(errors.response.status);
-
         if (errors.response.status === 404) {
           setUser(false);
           setRepos(false);
@@ -134,6 +132,12 @@ function App() {
                       .split("")
                       .splice(0, 10)
                       .join("")}`}
+                  </li>
+                  <li
+                    key="updated"
+                    className="text-md text-yellow-600 font-semibold text-2sm leading-relaxed"
+                  >
+                    {`stargazers: ${repo.stargazers_count}`}
                   </li>
                   <li
                     key="language"
