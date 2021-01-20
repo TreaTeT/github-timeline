@@ -10,12 +10,31 @@ import "react-vertical-timeline-component/style.min.css";
 function App() {
   const axios = require("axios");
   const { register, handleSubmit, errors } = useForm();
-  const [user, setUser] = React.useState();
-  const [repos, setRepos] = React.useState();
+  const [user, setUser] = React.useState<IUser | undefined>();
+  const [repos, setRepos] = React.useState<IRepo [] | undefined>();
   const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
 
-  const onSubmit = ({ name }) => {
-    axios
+  interface IUser {
+    login: string;
+    avatar_url: string;
+    followers: number;
+    html_url: string;
+    public_repos: number;
+    created_at: string;
+  }
+
+  interface IRepo {
+      name: string;
+      html_url: string;
+      fork: boolean;
+      created_at: string;
+      pushed_at: string;
+      stargazers_count: number
+      language: string;
+  }
+
+  const onSubmit = ({name}: any) => {
+    axios 
       .all([
         axios.get(`https://api.github.com/users/${name}`, {
           headers: {
@@ -29,22 +48,21 @@ function App() {
         }),
       ])
       .then(
-        axios.spread((user, repos) => {
+        axios.spread((user: any, repos:any) => {
           setUser(user.data);
-          setRepos(repos.data.sort((a, b) => a.created_at < b.created_at));
+          setRepos(repos.data.sort((a:any, b:any) => a.created_at < b.created_at));
         })
       )
-      .catch((errors) => {
-        if (errors.response.status === 404) {
-          setUser(false);
-          setRepos(false);
-        }
+      .catch((errors: any) => {
+        // if (errors.response.status === 404) {
+        //   setUser(false);
+        //   setRepos(false);
+        // }
       });
   };
 
   return (
     <div className="min-h-screen bg-gray-100 py-6 flex flex-col sm:py-12">
-      {console.log(GITHUB_TOKEN)}
       <p className="mx-auto font-bold text-4xl mb-5 tracking-wide text-blue-500">
         Github Timeline
       </p>
@@ -91,10 +109,10 @@ function App() {
             </ul>
           </div>
         </div>
-      ) : user === false ? (
-        <div className="block mx-auto font-bold text-lg text-red-400 text-opacity-80">
-          User not found!
-        </div>
+      // ) : user === false ? (
+      //   <div className="block mx-auto font-bold text-lg text-red-400 text-opacity-80">
+      //     User not found!
+      //   </div>
       ) : (
         ""
       )}
