@@ -4,16 +4,18 @@ import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
-import { useForm } from "react-hook-form";
+import { useForm  } from "react-hook-form";
 import "react-vertical-timeline-component/style.min.css";
+import {  AxiosError } from "axios";
 
-function App() {
+const App: React.FC = () => {
   const axios = require("axios");
-  const { register, handleSubmit, errors } = useForm();
-  const [user, setUser] = React.useState<IUser | undefined>();
+  const { register, handleSubmit, errors } = useForm<IName>();
+  const [user, setUser] = React.useState<IUser | undefined >();
   const [repos, setRepos] = React.useState<IRepo [] | undefined>();
+  const [userFound, setUserFound] = React.useState<boolean | undefined>();
   const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
-
+ 
   interface IUser {
     login: string;
     avatar_url: string;
@@ -33,7 +35,11 @@ function App() {
       language: string;
   }
 
-  const onSubmit = ({name}: any) => {
+  interface IName{
+    name : string;
+  }
+
+const onSubmit  = ({name}: IName):void => {
     axios 
       .all([
         axios.get(`https://api.github.com/users/${name}`, {
@@ -53,11 +59,13 @@ function App() {
           setRepos(repos.data.sort((a:any, b:any) => a.created_at < b.created_at));
         })
       )
-      .catch((errors: any) => {
-        // if (errors.response.status === 404) {
-        //   setUser(false);
-        //   setRepos(false);
-        // }
+      .catch((errors: AxiosError) => {
+        console.error(errors)
+        if (errors?.response?.status === 404) {
+          setUser(undefined);
+          setRepos(undefined);
+          setUserFound(false);
+        }
       });
   };
 
@@ -109,10 +117,10 @@ function App() {
             </ul>
           </div>
         </div>
-      // ) : user === false ? (
-      //   <div className="block mx-auto font-bold text-lg text-red-400 text-opacity-80">
-      //     User not found!
-      //   </div>
+      ) : userFound === false ? (
+        <div className="block mx-auto font-bold text-xl text-red-500 text-opacity-80">
+          User not found!
+        </div>
       ) : (
         ""
       )}
